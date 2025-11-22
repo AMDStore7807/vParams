@@ -24,3 +24,41 @@ Pastikan struktur folder Anda seperti ini agar script berjalan lancar:
 └── genieacs/           # Folder Data (Hasil mongodump)
     └── virtual_parameters.bson  # Data Database Utama
     └── virtual_parameters.metadata.json
+
+
+
+
+## PENGGUNAAN
+# copy URL
+
+git clone https://github.com/AMDStore7807/vParams.git
+
+
+
+# Masuk ke foldernya
+
+`
+
+cd vParams
+
+`
+
+
+
+# Berikan Izin
+
+`
+
+chmod +x restore.sh
+
+`
+
+
+
+# Jalankan
+
+`
+
+bash restore.sh
+
+`
