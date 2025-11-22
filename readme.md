@@ -30,35 +30,29 @@ Pastikan struktur folder Anda seperti ini agar script berjalan lancar:
 
 ## PENGGUNAAN
 # copy URL
-`
+```
 git clone https://github.com/AMDStore7807/vParams.git
-`
+```
 
 
 # Masuk ke foldernya
 
-`
-
+```
 cd vParams
-
-`
+```
 
 
 
 # Berikan Izin
-
-`
-
+```
 chmod +x restore.sh
-
-`
+```
 
 
 
 # Jalankan
 
-`
-
+```
 bash restore.sh
 
-`
+```
