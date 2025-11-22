@@ -7,9 +7,11 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Deteksi lokasi script (agar bisa dijalankan dari folder mana saja)
+# Deteksi lokasi script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKUP_FILE="$SCRIPT_DIR/genieacs/virtualParameters.bson"
+# PASTIKAN NAMA FILE INI SESUAI DENGAN ISI FOLDER GENIEACS BOS
+# (Biasanya virtual_parameters.bson atau virtualParameters.bson, sesuaikan ya Bos)
+BACKUP_FILE="$SCRIPT_DIR/genieacs/virtual_parameters.bson" 
 
 clear
 
@@ -26,17 +28,22 @@ echo -e "${BLUE}================================================================
 echo -e "${BLUE}=================== RESTORE VIRTUAL PARAMETERS TOOL ========================${NC}"
 echo -e "${BLUE}============================================================================${NC}"
 
-# Cek keberadaan file backup
+# Cek keberadaan file backup (Handle nama file camelCase atau snake_case)
 if [ ! -f "$BACKUP_FILE" ]; then
-    echo -e "${RED}[ERROR] File backup tidak ditemukan di:${NC}"
-    echo -e "${RED}$BACKUP_FILE${NC}"
-    echo -e "Pastikan struktur folder repo sudah benar (folder 'genieacs' harus ada)."
-    exit 1
+    # Coba cek nama alternatif (virtualParameters.bson)
+    BACKUP_FILE="$SCRIPT_DIR/genieacs/virtualParameters.bson"
+    if [ ! -f "$BACKUP_FILE" ]; then
+        echo -e "${RED}[ERROR] File backup tidak ditemukan!${NC}"
+        echo -e "Cari file .bson di folder: $SCRIPT_DIR/genieacs/"
+        exit 1
+    fi
 fi
 
-echo -e "${BLUE}[INFO] File backup ditemukan!${NC}"
-echo -e "${BLUE}[WARNING] Proses ini akan MENGHAPUS semua Virtual Parameters yang ada sekarang${NC}"
-echo -e "${BLUE}          dan menggantinya dengan data dari backup.${NC}"
+echo -e "${BLUE}[INFO] File backup ditemukan: $BACKUP_FILE${NC}"
+echo -e "${BLUE}[WARNING] Script ini akan melakukan:${NC}"
+echo -e "${BLUE}          1. STOP Service GenieACS.${NC}"
+echo -e "${BLUE}          2. HAPUS parameter lama & RESTORE backup.${NC}"
+echo -e "${RED}          3. RESTART SYSTEM (VPS/Server) SECARA OTOMATIS.${NC}"
 echo -e ""
 read -p "Apakah Anda yakin ingin melanjutkan? (y/n): " confirmation
 
@@ -46,23 +53,34 @@ if [ "$confirmation" != "y" ]; then
 fi
 
 echo -e ""
+
+# 0. Matikan Service DULU (Supaya tidak ada cache nyangkut / write conflict)
+echo -e "${BLUE}[1/4] Mematikan GenieACS Services...${NC}"
+systemctl stop genieacs-cwmp genieacs-nbi genieacs-fs genieacs-ui || true
+
 # 1. Drop Collection Lama
-echo -e "${BLUE}[1/3] Membersihkan database lama...${NC}"
+echo -e "${BLUE}[2/4] Membersihkan database lama...${NC}"
 mongosh genieacs --eval "db.virtual_parameters.drop()" > /dev/null 2>&1 || mongo genieacs --eval "db.virtual_parameters.drop()" > /dev/null 2>&1
 
 # 2. Restore Data Baru
-echo -e "${BLUE}[2/3] Mengembalikan data dari backup...${NC}"
+echo -e "${BLUE}[3/4] Mengembalikan data dari backup...${NC}"
 if mongorestore --db genieacs --collection virtual_parameters "$BACKUP_FILE"; then
     echo -e "${GREEN}[OK] Database berhasil direstore.${NC}"
 else
     echo -e "${RED}[FAIL] Gagal restore database. Cek koneksi MongoDB.${NC}"
+    # Nyalakan lagi service kalau gagal biar gak mati total
+    systemctl start genieacs-cwmp genieacs-nbi genieacs-fs genieacs-ui
     exit 1
 fi
 
-# 3. Restart Service (Penting supaya GenieACS reload cache VP)
-echo -e "${BLUE}[3/3] Merestart GenieACS Services...${NC}"
-systemctl restart genieacs-cwmp genieacs-nbi genieacs-fs genieacs-ui
+# 3. Full System Reboot
+echo -e "${BLUE}[4/4] SYSTEM AKAN RESTART DALAM 5 DETIK...${NC}"
+echo -e "${GREEN}Simpan pekerjaan Anda jika ada koneksi SSH lain!${NC}"
 
-echo -e "${BLUE}============================================================================${NC}"
-echo -e "${GREEN}                          RESTORE SUKSES BOS!                               ${NC}"
-echo -e "${BLUE}============================================================================${NC}"
+for ((i = 5; i >= 1; i--)); do
+    echo -ne "Rebooting in $i... \r"
+    sleep 1
+done
+
+echo -e "\n${BLUE}Good bye Bos! Sampai jumpa setelah restart!${NC}"
+reboot
