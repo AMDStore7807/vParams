@@ -9,7 +9,7 @@ NC='\033[0m' # No Color
 
 # Deteksi lokasi script (agar bisa dijalankan dari folder mana saja)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKUP_FILE="$SCRIPT_DIR/genieacs/virtual_parameters.bson"
+BACKUP_FILE="$SCRIPT_DIR/genieacs/virtualParameters.bson"
 
 clear
 
