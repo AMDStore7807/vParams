@@ -28,17 +28,17 @@ echo -e "${BLUE}==========================================================${NC}"
 # =========================================================
 #  PASSWORD CHECK (HASH)
 # =========================================================
-read -sp "Masukkan password: " USER_PASS
-echo ""
+# read -sp "Masukkan password: " USER_PASS
+# echo ""
 
-USER_HASH=$(echo -n "$USER_PASS" | sha256sum | awk '{print $1}')
+# USER_HASH=$(echo -n "$USER_PASS" | sha256sum | awk '{print $1}')
 
-if [[ "$USER_HASH" != "$REAL_HASH" ]]; then
-    echo -e "${RED}Password salah Bos!${NC}"
-    exit 1
-fi
+# if [[ "$USER_HASH" != "$REAL_HASH" ]]; then
+#     echo -e "${RED}Password salah Bos!${NC}"
+#     exit 1
+# fi
 
-echo -e "${GREEN}Password benar, lanjut...${NC}"
+# echo -e "${GREEN}Password benar, lanjut...${NC}"
 
 # ---------------------------------------------------------
 # STEP 0: MENU PILIHAN
